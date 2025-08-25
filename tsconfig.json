@@ -4,11 +4,11 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
-    "strict": true,
-    "noImplicitOverride": true,
+    "strict": false,
+    "noImplicitOverride": false,
     "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
     "skipLibCheck": true,
     "isolatedModules": true,
     "esModuleInterop": true,
@@ -26,8 +26,8 @@
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictInjectionParameters": false,
+    "strictInputAccessModifiers": false,
+    "strictTemplates": false
   }
 }

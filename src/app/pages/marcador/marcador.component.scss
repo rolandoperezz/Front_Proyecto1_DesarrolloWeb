@@ -1,0 +1,82 @@
+/* Colores base de equipos (puedes ajustarlos) */
+.team-home .p-card {
+  border-top: 6px solid #2563eb; /* azul */
+}
+.team-away .p-card {
+  border-top: 6px solid #ef4444; /* rojo */
+}
+
+.timer-card .p-card-content {
+  padding-top: 0.5rem;
+}
+
+.timer-display {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+}
+
+.score {
+  text-align: center;
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+:host ::ng-deep .p-card .p-card-header {
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+
+/* Card con acento por equipo */
+.team-card {
+  /* valor por defecto si no llega la var */
+  --team-color: #64748b;
+
+  border-top: 6px solid var(--team-color);
+  /* glow sutil coloreado */
+  box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 10px 30px -12px var(--team-color);
+
+  /* header con ligera banda superior usando el color del equipo */
+  :host ::ng-deep .p-card-header {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--team-color) 18%, transparent), transparent);
+    /* Si tu navegador no soporta color-mix, se verá transparente (está bien). */
+  }
+
+  /* subheader/labels pueden quedarse neutros para legibilidad */
+}
+
+
+/* Tamaño reducido del picker inline dentro del overlay */
+:host ::ng-deep .cpmini.p-colorpicker.p-colorpicker-inline {
+  width: 110px;
+  height: 110px;
+  display: inline-block;
+}
+
+:host ::ng-deep .cpmini .p-colorpicker-panel {
+  width: 110px;
+  height: 110px;
+}
+
+:host ::ng-deep .cpmini .p-colorpicker-color-selector {
+  width: 92px;     /* 110 - (barra de tono + margen) */
+  height: 110px;
+}
+
+:host ::ng-deep .cpmini .p-colorpicker-hue {
+  width: 14px;
+  height: 110px;
+  margin-left: 4px;
+}
+
