@@ -2,12 +2,13 @@ import { Component, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TemporizadorService } from '../../shared/services/temporizador.service';
 import { MessageService } from 'primeng/api';
+import { PartidosService, SaveMatchRequest } from '../../shared/services/partidos.service';
 
 type TeamKey = 'home' | 'away';
 @Component({
   selector: 'app-marcador',
   templateUrl: './marcador.component.html',
-  styleUrl: './marcador.component.scss'
+  styleUrls: ['./marcador.component.scss']
 })
 export class MarcadorComponent implements OnDestroy {
    // Estado principal
@@ -36,9 +37,14 @@ export class MarcadorComponent implements OnDestroy {
   remainingSec = this.selectedDuration;
   private subs: Subscription[] = [];
 
+    // Flags de guardado final
+  private savingFinal = false;
+  private finalSaved = false;
+
   constructor(
     public timer: TemporizadorService,
-    private toast: MessageService
+    private toast: MessageService,
+        private partidoServ: PartidosService     // ← servicio inyectado
   ) {
     this.timer.setDuration(this.selectedDuration);
 
@@ -111,28 +117,88 @@ getContrast(hex: string) {
   }
 
   // ====== CUARTOS ======
-  nextQuarter(manual = true) {
-    if (this.quarter < this.maxQuarters) {
-      this.quarter++;
-      this.timer.setDuration(this.selectedDuration);
-      // (Opcional de reglas) Reinicia faltas de equipo al iniciar cuarto
-      this.resetTeamFouls();
-      if (manual) {
-        this.toast.add({ severity: 'info', summary: 'Cuarto', detail: `Inicia Q${this.quarter}` });
-      }
-    } else {
-      this.toast.add({ severity: 'success', summary: 'Final', detail: 'Fin del partido' });
-      this.beepBuzzer();
+ nextQuarter(manual = true) {
+  if (this.quarter < this.maxQuarters) {
+    this.quarter++;
+    this.timer.setDuration(this.selectedDuration);
+    this.resetTeamFouls();
+    if (manual) {
+      this.toast.add({ severity: 'info', summary: 'Cuarto', detail: `Inicia Q${this.quarter}` });
     }
+  } else {
+    // ↓↓↓ Detener reloj y dejarlo en 00:00 al finalizar el partido
+    if (typeof (this.timer as any).finish === 'function') {
+      (this.timer as any).finish();      // pausa + remaining = 0 (si existe en tu servicio)
+    } else {
+      this.timer.pause();                 // fallback: pausar
+      this.remainingSec = 0;             // forzar visualmente 00:00
+    }
+
+    this.toast.add({ severity: 'success', summary: 'Final', detail: 'Fin del partido' });
+    this.beepBuzzer();
+    this.saveFinalMatch();
+  }
+}
+
+
+onQuarterFinished() {
+  // Si terminó el último cuarto, finaliza el partido (detiene reloj + guarda)
+  if (this.quarter === this.maxQuarters) {
+    if (typeof (this.timer as any).finish === 'function') {
+      (this.timer as any).finish();
+    } else {
+      this.timer.pause();
+      this.remainingSec = 0;
+    }
+
+    this.toast.add({ severity: 'success', summary: 'Final', detail: 'Fin del partido' });
+    this.beepBuzzer();
+    this.saveFinalMatch();
+    return; // evita beeps/delays extra
   }
 
-  onQuarterFinished() {
-    this.beepBuzzer();
-    this.toast.add({ severity: 'warn', summary: 'Tiempo', detail: `Fin del Q${this.quarter}` });
+  // Para Q1–Q3: flujo normal de fin de cuarto
+  this.beepBuzzer();
+  this.toast.add({ severity: 'warn', summary: 'Tiempo', detail: `Fin del Q${this.quarter}` });
+  if (this.autoAdvance) {
+    setTimeout(() => this.nextQuarter(false), 800);
+  }
+}
 
-    if (this.autoAdvance) {
-      setTimeout(() => this.nextQuarter(false), 800);
-    }
+
+    private saveFinalMatch() {
+    if (this.savingFinal || this.finalSaved) return; // evita dobles envíos
+    this.savingFinal = true;
+
+    const payload: SaveMatchRequest = {
+      homeName: this.teamName.home,
+      awayName: this.teamName.away,
+      homeScore: this.score.home,
+      awayScore: this.score.away,
+      homeFouls: this.fouls.home,
+      awayFouls: this.fouls.away,
+      quarterDurationSec: this.selectedDuration,
+      quartersPlayed: this.maxQuarters,
+      homeColorHex: this.teamColor.home,
+      awayColorHex: this.teamColor.away,
+      // Si tienes stats por cuarto, empaquétalas:
+      // extraJson: JSON.stringify({ q1: 20, q2: 18, q3: 22, q4: 18 })
+    };
+
+    this.partidoServ.saveMatch(payload).subscribe({
+      next: () => {
+        this.finalSaved = true;
+        this.toast.add({ severity: 'success', summary: 'Guardado', detail: 'Partido guardado correctamente' });
+      },
+      error: (err) => {
+        const msg = (err?.error && typeof err.error === 'string') ? err.error : 'No se pudo guardar el partido';
+        this.toast.add({ severity: 'error', summary: 'Error', detail: msg });
+        console.error('Error guardando partido', err);
+      },
+      complete: () => {
+        this.savingFinal = false;
+      }
+    });
   }
 
   // ====== GENERAL ======
@@ -142,6 +208,7 @@ getContrast(hex: string) {
     this.quarter = 1;
     this.timer.setDuration(this.selectedDuration);
     this.toast.add({ severity: 'success', summary: 'Reiniciado', detail: 'Marcador y reloj reiniciados' });
+    this.finalSaved = false; 
   }
 
   // Buzzer simple con WebAudio
@@ -169,4 +236,14 @@ getContrast(hex: string) {
     const s = Math.floor(sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
+
+async saveMatch(result: any) {
+  const resp = await fetch('http://localhost:8080/api/matches', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(result)
+  });
+  if (!resp.ok) throw new Error(await resp.text());
+  return resp.json();
+}
 }

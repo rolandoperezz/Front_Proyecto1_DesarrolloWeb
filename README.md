@@ -25,3 +25,22 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+# 🏀 Frontend — Marcador de Baloncesto (Angular + PrimeNG)
+
+Aplicación web que simula un **marcador de baloncesto en tiempo real**.  
+Permite gestionar **puntos**, **faltas**, **tiempo por cuarto** (con avance **manual/automático**), **colores por equipo** y **guardar automáticamente** el resultado cuando finaliza el partido.
+
+---
+
+## 🧩 Descripción general
+
+- **Marcador** por equipo con botones **+1 / +2 / +3 / −1** (nunca baja de 0).
+- **Reloj por cuarto** con duración configurable (8, 10, 12 min), **iniciar / pausar / reiniciar** y **buzzer** al llegar a `00:00`.
+- **Cuartos (Q1–Q4)** con **avance automático** opcional (Auto Q+) o **manual** (botón “Siguiente cuarto”).
+- **Faltas por equipo** (+/−).
+- **Colores por equipo** mediante **color picker** en *overlay*; el color se refleja en el card y el puntaje.
+- **Fin del partido (Q4)**: el reloj **se detiene**, suena el buzzer, se muestra **toast** y se envía un **POST** a la API con el resultado final.
+- **Reinicio general** para comenzar un nuevo juego (marcador, faltas, cuarto y reloj).
+
+---

@@ -19,6 +19,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
     BadgeModule,
     ToastModule,
     ColorPickerModule,
-    OverlayPanelModule
+    OverlayPanelModule,
+    HttpClientModule
   ],
   providers: [MessageService],
   bootstrap: [AppComponent]
